@@ -1,0 +1,396 @@
+---
+title: "Solução do problema de quadrados mínimos discretos usando SVD"
+author: "João Pedro de Lima, Raymundo Eduardo Pilz"
+date: "2025/6/23"
+format:
+  pdf:
+    documentclass: article
+    # Opções adicionais para LaTeX (opcional)
+    # classoption:
+    #   - a4paper
+    #   - 12pt
+    # mainfont: Arial
+    # monofont: "Courier New"
+    # urlcolor: blue
+    # linkcolor: blue
+    # citecolor: blue
+    # header-includes:
+    #   - \usepackage{amsmath}
+    #   - \usepackage{graphicx}
+---
+
+# 1. Introdução
+
+O método dos mínimos quadrados é uma técnica que busca encontrar uma função que melhor se ajuste a um conjunto referente a observações de um experimento, neste caso, serão pontos no formato $\ (x_i,y_i)$, indicando que trataremos sobre o viés discreto deste método.
+
+Durante a história, diversos métodos para a resolução do problema de mínimos quadrados foram apresentados, desenvolvidos independentemente por diversas pessoas, entre elas, cabe mencionar Legendre e também Carl Friedrich Gauss, que a apresentou em um artigo de cálculo das órbitas dos corpos celestes, indo mais além que Legendre e relacionando o método com parâmetros probabilísticos.
+
+Há um interesse em ajustar funções que se pareçam com as observações de determinados fenômenos para que se possa entender analiticamente, computacionalmente e a partir disso inferir hipóteses interessantes. Um dos exemplos dos primeiros usos do método em casos práticos foi protagonizado por Gauss, onde, a partir de observações em que o astrônomo Giuseppe Piazzi registrou do caminho que Ceres percorreu por 40 dias, ele, a partir do método de mínimos quadrados, conseguiu fornecer estimativas para que os astrônomos conseguissem realocar Ceres.
+
+A SVD é uma técnica matricial que decompõe uma matriz (real ou complexa) original em três componentes:
+
+-   Uma matriz ortogonal $\ U$
+-   Uma matriz diagonal $\Sigma$
+-   A transposta da matriz ortogonal $\ V$
+
+A representação geral da SVD é dada por: $$
+A = U\Sigma V^T
+$$ A SVD é amplamente utilizada em problemas de mínimos quadrados pois ela permite uma representação compacta dos dados e facilita a interpretação dos resultados.
+
+\textbf{O problema de Mínimos Quadrados via SVD}
+
+-   $Ax = b$ nem sempre tem solução exata.
+
+-   O problema de mínimos quadrados consiste em determinar um vetor $x$ que minimiza a expressão $\|b - Ax\|_2$.
+
+-   A denominação desse problema se deve ao fato de estarmos minimizando a soma dos quadrados dos resíduos.
+
+\textbf{Teorema:}
+
+Sejam $A \in \mathbb{R}^{n \times m}$, $b \in \mathbb{R}^n$ ($n < m$) e posto($A$) $= r$. O problema de mínimos quadrados associado ao sistema linear $Ax = b$ possui exatamente uma solução de norma mínima.
+\newpage
+
+# 2. Fundamentação teórica
+
+\textbf{Quadrados Minimos Discretos:}
+
+O objetivo desse método consiste em ajustar os parâmetros de uma função modelo para que ela se ajuste melhor a um conjunto de dados. Um conjunto de dados simples consiste em $n$ pontos (pares ordenados) $(x_i, y_i)$, $i = 1, \dots, n$, onde $x_i$ é uma variável independente e $y_i$ é uma variável dependente cujo valor é encontrado por observação.
+
+A função modelo tem fórmula $f(\boldsymbol{x}, \boldsymbol{\beta})$, onde $m$ parâmetros ajustáveis são mantidos no vetor $\boldsymbol{\beta}$. O objetivo é encontrar os valores dos parâmetros para o modelo que "melhor" se ajusta aos dados.
+
+O ajuste do modelo é feito por seu resíduo, definido como a diferença entre o valor real da variável dependente e o valor predito pelo modelo:
+
+$$
+r_i = y_i - f(x_i, \boldsymbol{\beta})
+$$
+
+O método dos quadrados mínimos, então, encontra os valores dos parâmetros ideais, minimizando a soma $S$, dos quadrados residuais: $S = \sum_{i=1}^{n} r_i^2$
+
+Um exemplo de modelo em duas dimensões é o da linha reta. Denotando a intercepção em $y$ como $\beta_0$ e a inclinação como $\beta_1$, a função do modelo é dada por:
+
+$$
+f(\boldsymbol{x}, \boldsymbol{\beta}) = \beta_0 + \beta_1 x
+$$
+
+Pode ocorrer de um conjunto de dados possuir mais de uma variável independente. Por exemplo, ao ajustar um plano a um conjunto de medidas de alturas, o plano é função de duas variáveis independentes, $x$ e $z$, digamos. No caso mais geral, pode haver uma ou mais variáveis independentes e uma ou mais variáveis dependentes em cada par ordenado.
+\newpage
+
+\textbf{Aplicações:}
+
+Por meio do método de minimos quadrados é possivel definir coeficientes ideais para modelar a situação a seguir, que traz observações referentes a consumo e renda, como podem ser visualizados abaixo:
+
+
+\begin{tabular}{|c|r|r|}
+    \hline
+    $i$ & \textbf{Consumo} ($y$) & \textbf{Renda} ($x$) \\
+    \hline
+    1 & 122 & 139 \\
+    2 & 114 & 126 \\
+    3 & 86 & 90 \\
+    4 & 134 & 144 \\
+    5 & 146 & 163 \\
+    6 & 107 & 136 \\
+    7 & 68 & 61 \\
+    8 & 117 & 62 \\
+    9 & 71 & 41 \\
+    10 & 98 & 120 \\
+    \hline
+\end{tabular}
+
+Tabela 1: Dados de Consumo e Renda (Legenda manual, se desejar)
+
+Tendo as observações e utilizando o método, encontra-se coeficientes de $a = 52.69$ e de $b = 0,4954$, assim, podemos dizer que a regressão linear simples que descreve a relação entre consumo e renda se dá por:
+$$
+Consumo = 52.69\ +\ 0.4954\ \times\ Renda\ + \ e
+$$
+onde, com exceção a parte do Consumo que não é influenciada pela Renda, o incremento de 1u.m na Renda causa um incremento esperado de 0,4954u.m no Consumo.
+
+\textbf{Alternativas de soluções para o problema de minimos quadrados:}
+
+* Solução Analítica:
+
+Aplica-se a: Problemas de regressão linear clássica. Parte da equação matricial: 
+$$
+\mathbf{X}^T \mathbf{X} \boldsymbol{\beta} = \mathbf{X}^T \mathbf{y}
+$$
+
+onde, $\mathbf{X}$ é a matriz dos dados preditos, $\mathbf{y}$ é o vetor das respostas e $\boldsymbol{\beta}$ é o vetor de parâmetros a se estimar.
+
+A solução é
+
+$$
+\hat{\boldsymbol{\beta}} = (\mathbf{X}^T \mathbf{X})^{-1} \mathbf{X}^T \mathbf{y}
+$$
+O ponto forte dessa abordagem para solução é a rapidez para pequenas e médias dimensões. Quanto a limitações, se $\mathbf{X}^T \mathbf{X}$ for mal-condicionada, pode gerar instabilidade numérica
+
+* Decomposição QR
+
+Resolve o sistema por meio da decomposição da matriz $\mathbf{X} = \mathbf{Q}\mathbf{R}$
+
+Onde, $\mathbf{Q}$ é ortogonal e $\mathbf{R}$ é triangular superior. Apresenta uma boa estabilidade numérica, contudo, uma alta sensibilidade à colinearidade
+
+* Decomposição por SVD (Singular Value Decomposition):
+
+Baseia-se na descomposição: $\mathbf{A} = \mathbf{U} \Sigma \mathbf{V}^T.$
+
+É utilizada quando $\mathbf{A}$ tem colinearidade, dados mal-condicionados ou dados com perda de informação dimensional.
+Como ponto de destaque em relação as outras tem a excelente estabilidade numérica. Porém, se depara com o custo computacional
+
+Cabe mencionar que existem diversas abordagens para a resolução do problema tratado, contudo, são métodos que devem ser aplicados em situações muito espificas, por exemplo, existe uma categoria com vários metodos iterativos, utilizada para grandes conjuntos de dados, além disso pode-se destacar a existencia de métodos de regularização, que adicionam aos coeficientes 'penalizações' que buscam diminuir o erro de problemas mal-condicionados. Por isso, focou-se na comparação entre os métodos conservadores para a resolução do problema.
+
+\textbf{Propriedades e vantagens:}
+
+Nota-se que a SVD dispensa a necessidade de inverter matrizes quase singulares, fazendo com que seja mais estavel numericamente dentre as principais técnicas, mesmo quando as colunas de $\mathbf{A}$ são quase linearmente dependentes, ela tem a capacidade de fornecer soluções significativas, outro fator que corrobora com essa caracteristica é a possibilidade de identificar componetos com autovalores quase nulos, isso permite fazer uma espécie de "filtragem" para melhorar a estabilidade. A SVD fornece diretamente a solução de mínimos quadrados de norma mínima, ou seja, entre todas as soluções possíveis, ela retorna a de menor norma. Além disso, a resolução pela decomposição SVD modela bem problemas onde as matrizes são não quadradas e matrizes cujo posto é não completo.
+\newpage
+
+# 3. Metodologia
+
+\textbf{Teorema SVD Geométrico:}
+
+Seja $A \in \mathbb{R}^{n \times m}$ uma matriz de posto $r > 0$. Então, existem $\sigma_1 \ge \sigma_2 \ge \dots \ge \sigma_r > 0$, uma base ortonormal $\{v_1, \dots, v_m\}$ de $\mathbb{R}^m$ e uma base ortonormal $\{u_1, \dots, u_n\}$ de $\mathbb{R}^n$ de modo que
+
+$$
+Av_i = \begin{cases}
+    \sigma_i u_i, & \text{se } i = 1, \dots, r \\
+    0, & \text{se } i = r+1, \dots, m.
+\end{cases}
+\quad \text{e} \quad
+A^T u_i = \begin{cases}
+    \sigma_i v_i, & \text{se } i = 1, \dots, r \\
+    0, & \text{se } i = r+1, \dots, n.
+\end{cases}
+$$
+
+Em particular, $v_1, \dots, v_m$ são autovetores de $A^T A$, $u_1, \dots, u_n$ são autovetores de $AA^T$, e $\sigma_1^2, \dots, \sigma_r^2$ são os autovalores não nulos de $A^T A$ e $AA^T$.
+
+\textbf{Teorema:}
+
+Para cada $A \in \mathbb{R}^{n \times m}$ de posto $r$, existe uma matriz
+
+$$
+\Sigma = \begin{pmatrix}
+    \hat{\Sigma} & 0 \\
+    0 & 0
+\end{pmatrix} \in \mathbb{R}^{n \times m},
+$$
+
+em que $\hat{\Sigma} = \text{diag}\{\sigma_1, \dots, \sigma_r\}$ e $\sigma_1 \ge \sigma_2 \ge \dots \ge \sigma_r > 0$, e existem matrizes ortogonais $U \in \mathbb{R}^{n \times n}$ e $V \in \mathbb{R}^{m \times m}$ tais que
+
+$$
+A = U \Sigma V^T.
+$$
+
+Para cada $A \in \mathbb{R}^{n \times m}$ de posto $r$, existe uma matriz
+
+$$
+\Sigma = \begin{pmatrix}
+    \hat{\Sigma} & 0 \\
+    0 & 0
+\end{pmatrix} \in \mathbb{R}^{n \times m},
+$$
+
+em que $\hat{\Sigma} = \text{diag}\{\sigma_1, \dots, \sigma_r\}$ e $\sigma_1 \ge \sigma_2 \ge \dots \ge \sigma_r > 0$, e existem matrizes ortogonais $U \in \mathbb{R}^{n \times n}$ e $V \in \mathbb{R}^{m \times m}$ tais que
+
+$$
+A = U \Sigma V^T.
+$$ Os números $\sigma_1, \sigma_2, \dots, \sigma_r$ são denominados de valores singulares de $A$. As colunas de $U$ são chamadas de vetores singulares à esquerda e as colunas de $V$ de vetores singulares à direita. O produto $U \Sigma V^T$ é denominado uma \textbf{SVD} de $A$. \newpage
+
+### Propriedades das Matrizes na Decomposição SVD:
+
+#### Matriz $U$:
+
+-   As colunas de $U$ são autovetores de $AA^T$.
+-   $\det(U) = \pm 1$
+-   $U^{-1} = U^T$
+-   $U$ forma uma base ortogonal para o espaço das colunas de $A$.
+
+#### Matriz $\Sigma$:
+
+-   Os valores singulares $\sigma_i$ são raízes quadradas dos autovalores de $A^T A$.
+-   A matriz $\Sigma$ é diagonal, o que significa que todos os seus elementos fora da diagonal principal são zero.
+-   Os elementos da diagonal principal de $\Sigma$, denotados como $\sigma_1, \sigma_2, \dots, \sigma_r$, são os valores singulares de $A$, onde $r$ é o posto da matriz $A$. Esses valores são dispostos em ordem decrescente: $\sigma_1 \ge \sigma_2 \ge \dots \ge \sigma_r \ge 0$.
+-   A matriz $\Sigma$ terá $\min(m,n)$ valores singulares, onde os valores além do posto da matriz (se houver) são zero.
+
+Se $A$ é uma matriz $m \times n$:
+
+-   $\Sigma$ terá $m$ linhas e $n$ colunas.
+
+-   Se $m > n$, $\Sigma$ terá $n$ valores singulares seguidos de $m - n$ zeros.
+
+-   Se $m < n$, $\Sigma$ terá $m$ valores singulares seguidos de $n - m$ zeros.
+
+#### Matriz $V$:
+
+-   $\det(V) = \pm 1$
+-   $V^{-1} = V^T$
+-   $V$ forma uma base ortogonal para o espaço das linhas de $A$.
+-   A matriz $V$ é construída a partir de um conjunto ortonormal de autovetores da matriz $A^T A$.
+
+As matrizes $U$ e $V$ são ortogonais, ou seja:
+
+$$
+AA^{-1} = I
+$$
+
+$$
+A^{-1} = A^T \iff AA^T = I
+$$
+
+-   Para a construção de $\Sigma$ na fatoração, temos que encontrar os autovalores da matriz ($A^TA$), ordenamos esses autovalores do maior para o menor, denotamos como:
+
+$\sigma_1^2 \ge \sigma_2^2 \ge \dots \ge \sigma_k^2 > \sigma_{k+1} = \dots = \sigma_n = 0$
+
+onde $\sigma_k^2$ é o menor autovalor maior que $0$ de $A^T A$.
+
+A matriz diagonal $\Sigma$ é dada por:
+
+$$
+\Sigma = \begin{bmatrix}
+    \sigma_1 & 0 & \dots & 0 \\
+    0 & \sigma_2 & \dots & 0 \\
+    \vdots & \vdots & \ddots & \vdots \\
+    0 & 0 & \dots & \sigma_n \\
+    0 & 0 & \dots & 0 \\
+    \vdots & \vdots & \ddots & \vdots \\
+    0 & 0 & \dots & 0
+\end{bmatrix}
+$$
+
+onde $\sigma_i = 0$ quando $k < i \le n$. Os valores singulares são únicos para cada matriz $A$.
+
+-   Para a construção da matriz ortogonal $V$, usamos a matriz simétrica $A^T A$, fatoramos ela como:
+
+$$
+A^T A = VDV^T
+$$
+
+$V$ é uma matriz ortogonal $n \times n$. Cujas colunas são chamadas de vetores singulares direitos, as colunas são os autovetores de $A^T A$. Os vetores singulares direitos formam uma base ortonormal para o espaço linha de $A$.
+
+-   Os elementos de $U$ são determinados por
+
+$$
+u_i = \frac{1}{\sigma_i} Av_i, \quad i=1,2,\dots,n
+$$
+
+$U$ é uma matriz $m \times m$, onde as colunas são chamadas de vetores singulares esquerdos, os vetores singulares esquerdos representam uma base ortonormal para o espaço da coluna de $A$.
+
+Determinamos os autovetores de $AA^T$, as colunas desses autovetores formam a matriz $U$. É comum selecionar os autovetores correspondentes aos maiores autovalores para as primeiras colunas de $U$. Para termos a garantia de que $U$ é ortogonal nós normalizamos cada coluna de $U$ dividindo pela sua norma Euclidiana.
+
+Deste modo, a matriz $A$ $m \times n$, com $n$ valores singulares pode ser escrita na forma:
+
+$$
+A = \sigma_1 u_1 v_1^T + \dots + \sigma_n u_n v_n^T = \sum_{i=1}^{n} \sigma_i u_i v_i^T
+$$
+
+Pode-se implementar um \textbf{algoritmo} para a solução de norma mínima para o problema de mínimos quadrados via SVD a partir de:
+
+-   Calcular a SVD de $A$;
+
+-   Calcular o vetor $c = U^T b$;
+
+-   Calcular o vetor $y = (c_1/\sigma_1, \dots, c_m/\sigma_m)$ (se $r = m$) e $y = (c_1/\sigma_1, \dots, c_r/\sigma_r, 0, \dots, 0)$ (se $r < m$);
+
+-   Calcular o vetor $x = Vy$.
+\newpage
+
+# 4. Resultados
+ 
+A exemplificação da resolução do problema de regressão linear simples pelo método dos mínimos quadrados apresentado acima, via SVD, envolve a construção da matriz de design, a aplicação da decomposição SVD, o cálculo da pseudo-inversa e, finalmente, a multiplicação pela matriz de resultados. 
+
+A metodologia foi implementada em linguagem \textbf{Julia} para os dados de consumo e renda, segue script abaixo:
+
+Usando o pacote LinearAlgebra para SVD
+using LinearAlgebra
+
+Dados da Tabela
+x = [139.0, 126.0, 90.0, 144.0, 163.0, 136.0, 61.0, 62.0, 41.0, 120.0]
+y = [122.0, 114.0, 86.0, 134.0, 146.0, 107.0, 68.0, 117.0, 71.0, 98.0]
+
+Número de observações
+n = length(x)
+
+Construir a Matriz de Design A e o Vetor b
+A = hcat(ones(n), x)
+b = y
+
+Realiza a SVD de A
+F = svd(A)
+
+Constrói a matriz Sigma_plus (pseudo-inversa dos valores singulares)
+tolerance = max(size(A)...) * eps(Float64) * F.S[1]
+Sigma_plus_diag = [s > tolerance ? 1.0/s : 0.0 for s in F.S]
+
+A pseudo-inversa A_plus
+A_plus = F.V * Diagonal(Sigma_plus_diag) * F.U`
+
+Encontrar os Coeficientes Beta
+beta_hat = A_plus * b
+
+println("Coeficientes estimados (beta_0, beta_1):")
+println("beta_0 (intercepto) = ", beta_hat[1])
+println("beta_1 (coeficiente de Renda) = ", beta_hat[2])
+
+Função para prever consumo
+function predict_consumption(renda)
+    return beta_hat[1] + beta_hat[2] * renda
+end
+
+Coeficientes estimados (beta_0, beta_1):
+beta_0 (intercepto) = 52.69018446221764
+beta_1 (coeficiente de Renda) = 0.4954054002447952
+
+Relembrando de algo que foi mencionado no inicio do texto, sobre o que é possivel solucionar a partir do momento em que encontra-se a função mais ajustada, há o exemplo de \textbf{Previsão}, que pode ser implementado da seguinte maneira:
+
+predicted_y = predict_consumption(100.0)
+println("Consumo previsto para Renda = 100: ", predicted_y)
+
+Estimativa para a população do Brasil em 2025 (exemplo anterior)
+println("Estimativa em 2025: ", predict_consumption(2025.0))
+
+Consumo previsto para Renda = 100: 102.23072448669716
+Estimativa em 2025: 1061.2185590924962
+
+\newpage
+
+# 5. Conclusão
+ 
+ Recapitular principais pontos abordades e como a técnica SVD pode ser aplicada na solução
+ 
+ Relatar dificuldades
+ 
+\newpage
+ 
+# 6. Referências Bibliográficas
+  
+STRANG, Gilbert. Álgebra Linear e suas Aplicações. Tradução da 4ª ed. norte-americana. São Paulo: Cengage Learning, 2010.
+  
+DECOMPOSIÇÃO EM VALORES SINGULARES. In: WIKIPÉDIA, a enciclopédia livre. Flórida: Wikimedia Foundation, 2023. Disponível em: <https://pt.wikipedia.org/w/index.php?title=Decomposi%C3%A7%C3%A3o_em_valores_singulares&oldid=67208923>. Acesso em: 23 jun. 2025.
+
+MÉTODO DOS MÍNIMOS QUADRADOS. In: WIKIPÉDIA, a enciclopédia livre. Flórida: Wikimedia Foundation, 2025. Disponível em: <https://pt.wikipedia.org/w/index.php?title=M%C3%A9todo_dos_m%C3%ADnimos_quadrados&oldid=70032949>. Acesso em: 23 jun. 2025.
+
+~~~julia
+using LinearAlgebra, Plots
+
+# Dados de crescimento populacional
+anos = [2000, 2005, 2010, 2015, 2020]
+pop = [1000, 1200, 1500, 1900, 2500]
+
+# Normaliza o tempo e aplica log nos dados
+t = anos .- minimum(anos)
+y = log.(pop)
+
+# Monta o sistema Ax = y
+A = [ones(length(t)) t]
+
+# Decomposição SVD
+U, S, Vt = svd(A)
+
+# Cálculo da pseudo-inversa
+Σ⁺ = Diagonal([1/s for s in S])
+x = Vt' * Σ⁺ * U' * y
+c0, c1 = x
+
+# Recupera parâmetros a e b
+a = exp(c0)
+b = c1
+~~~

@@ -1,0 +1,124 @@
+---
+title: "Projeto de Cálculo Numérico"
+subtitle: "Trabalho 12 - SVD e Ajuste por Mínimos Quadrados"
+author: 
+  ["João", "Raymundo Eduardo Pilz"]
+date: today
+format: html
+# execute:
+#   enabled: false
+
+# engine: julia
+# jupyter: julia-1.10
+---
+
+## 1. Introdução
+
+Modelar fenômenos reais a partir de dados é uma das tarefas mais importantes da matemática aplicada. Em especial, quando se trata de prever o crescimento de uma população ao longo do tempo, modelos exponenciais se mostram bastante eficazes. Esses modelos, porém, exigem que ajustemos curvas a dados empíricos, um problema classicamente resolvido por **métodos de mínimos quadrados**.
+
+A **Decomposição em Valores Singulares (SVD)** é uma ferramenta poderosa da álgebra linear que decompõe uma matriz em três componentes: $U$, $\Sigma$ e $V^T$. Essa decomposição não só fornece informações importantes sobre a matriz, como seu posto e condicionamento, mas também oferece uma maneira robusta de resolver sistemas lineares sobredeterminados, como os que surgem no problema de quadrados mínimos.
+ 
+Este trabalho tem como objetivo aplicar a técnica de **(SVD)** para resolver um sistema sobredeterminado oriundo do ajuste de uma curva exponencial a dados de crescimento populacional. Utilizaremos o ambiente **Julia** para realizar os cálculos numéricos.
+
+## 2. Fundamentação Teórica
+
+### 2.1 Problema de Quadrados Mínimos Discretos
+
+Dado um sistema linear sobredeterminado $Ax = b$, onde $A \in \mathbb{R}^{m \times n}$, com $m > n$, não há, em geral, uma solução exata. O objetivo do problema de mínimos quadrados é encontrar $x \in \mathbb{R}^n$ tal que o erro $\|Ax - b\|_2$ seja minimizado. Essa solução satisfaz as **equacões normais**:
+
+$A^T A x = A^T b$
+
+Entretanto, resolver as equações normais diretamente pode ser numericamente instável. Uma alternativa mais robusta é utilizar a **Decomposição em Valores Singulares (SVD)**.
+
+### 2.2 Decomposição SVD
+
+A decomposição SVD de uma matriz $A \in \mathbb{R}^{m \times n}$ é dada por:
+
+$A = U \Sigma V^T$
+
+onde:
+
+* $U \in \mathbb{R}^{m \times m}$ é ortogonal ($U^T U = I$)
+* $V \in \mathbb{R}^{n \times n}$ é ortogonal
+* $\Sigma \in \mathbb{R}^{m \times n}$ é uma matriz diagonal com os **valores singulares** $\sigma_1 \geq \sigma_2 \geq \cdots \geq 0$
+
+A pseudo-inversa de $A$ pode ser escrita como:
+
+$A^+ = V \Sigma^+ U^T$
+
+onde $\Sigma^+$ é obtida invertendo os valores singulares distintos de zero e transpondo. A solução de mínimos quadrados é então:
+
+$x = A^+ b$
+
+Essa abordagem evita a formação de $A^T A$ e proporciona maior estabilidade numérica.
+
+## 3. Metodologia
+
+Queremos ajustar uma função do tipo:
+
+$P(t) = a e^{b t}$
+
+Tomando logaritmo natural em ambos os lados:
+
+$\ln P(t) = \ln a + b t \Rightarrow y = c_0 + c_1 t$
+
+Dessa forma, podemos usar regressão linear para estimar $c_0 = \ln a$ e $c_1 = b$.
+
+### 3.1 Implementação em Julia
+
+~~~julia
+using LinearAlgebra, Plots
+
+# Dados de crescimento populacional
+anos = [2000, 2005, 2010, 2015, 2020]
+pop = [1000, 1200, 1500, 1900, 2500]
+
+# Normaliza o tempo e aplica log nos dados
+t = anos .- minimum(anos)
+y = log.(pop)
+
+# Monta o sistema Ax = y
+A = [ones(length(t)) t]
+
+# Decomposição SVD
+U, S, Vt = svd(A)
+
+# Cálculo da pseudo-inversa
+Σ⁺ = Diagonal([1/s for s in S])
+x = Vt' * Σ⁺ * U' * y
+c0, c1 = x
+
+# Recupera parâmetros a e b
+a = exp(c0)
+b = c1
+~~~
+
+## 4. Resultados
+
+A função ajustada foi:
+
+$$P(t) = $(round(a, digits=2)) \cdot e^{ $(round(b, digits=4)) t }$$
+
+Vamos comparar os valores reais e os ajustados:
+
+~~~julia
+p_estimado = a .* exp.(b .* t)
+
+plot(anos, pop, label="Dados reais", marker=:circle, lw=2)
+plot!(anos, p_estimado, label="Ajuste exponencial (SVD)", lw=2, linestyle=:dash)
+xlabel!("Ano")
+ylabel!("População (milhares)")
+title!("Ajuste de Crescimento Populacional via SVD")
+~~~
+
+## 5. Conclusão
+
+O presente trabalho demonstrou como a decomposição em valores singulares (SVD) pode ser aplicada com sucesso na resolução de problemas de ajustes de curvas, em particular na modelagem de crescimento populacional. A transformação logarítmica da equação exponencial permitiu utilizar uma abordagem linear, e a aplicação da SVD garantiu uma solução estável e precisa mesmo em um sistema sobredeterminado.
+
+A abordagem proposta é especialmente útil quando se deseja evitar problemas numéricos associados à inversão direta de matrizes. O uso da linguagem Julia se mostrou eficiente tanto em desempenho quanto em clareza.
+
+## 6. Referências Bibliográficas
+
+* Anton, H., & Rorres, C. (2010). *Algebra Linear com Aplicações*. Bookman.
+* Strang, G. (2016). *Introduction to Linear Algebra*. Wellesley-Cambridge Press.
+* Trefethen, L. N. & Bau III, D. (1997). *Numerical Linear Algebra*. SIAM.
