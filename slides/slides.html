@@ -213,25 +213,34 @@ Raymundo Eduardo Pilz
 </div>
 
 </section>
-<section id="introdução" class="slide level2">
-<h2>Introdução</h2>
+<section id="o-que-é-a-técnica-svd-e-por-que-usar" class="slide level2">
+<h2>O que é a técnica SVD e por que usar?</h2>
 <ul>
-<li class="fragment">Ajustar curvas a dados reais é essencial em modelagem.</li>
-<li class="fragment">O método dos mínimos quadrados busca minimizar a soma dos quadrados dos resíduos.</li>
-<li class="fragment">SVD oferece uma solução estável, mesmo em casos com colinearidade ou matrizes mal-condicionadas.</li>
+<li class="fragment"><p>SVD = Decomposição em Valores Singulares</p></li>
+<li class="fragment"><p>Toda matriz <span class="math inline">\(A (m×n)\)</span> pode ser escrita como:</p>
+<p><span class="math display">\[
+A = U \Sigma V^T
+\]</span></p></li>
+<li class="fragment"><p><span class="math inline">\(U, V\)</span>: ortogonais | <span class="math inline">\(\Sigma\)</span>: diagonal com valores singulares</p></li>
 </ul>
 </section>
-<section id="problema-de-mínimos-quadrados" class="slide level2">
-<h2>Problema de Mínimos Quadrados</h2>
+<section id="propriedades-da-svd" class="slide level2">
+<h2>Propriedades da SVD</h2>
 <ul>
-<li class="fragment"><p><span class="math inline">\(Ax = b\)</span> nem sempre tem solução exata.</p></li>
-<li class="fragment"><p>O problema de mínimos quadrados consiste em determinar um vetor<span class="math inline">\(x\)</span> que minimiza a expressão<span class="math inline">\(\|b - Ax\|_2\)</span>.</p></li>
-<li class="fragment"><p>A denominação desse problema se deve ao fato de estarmos minimizando a soma dos quadrados dos resíduos.</p></li>
+<li class="fragment"><span class="math inline">\(U\)</span> e <span class="math inline">\(V\)</span> são ortogonais</li>
+<li class="fragment">Valores singulares <span class="math inline">\(\Sigma \leq 0\)</span></li>
+<li class="fragment">Sempre existe, mesmo para matrizes não quadradas</li>
+<li class="fragment">Ordenados de forma decrescente</li>
 </ul>
 </section>
-<section id="teorema" class="slide level2">
-<h2>Teorema</h2>
-<p>Sejam<span class="math inline">\(A \in \mathbb{R}^{n \times m}\)</span>,<span class="math inline">\(b \in \mathbb{R}^n\)</span> (<span class="math inline">\(n &lt; m\)</span>) e posto(<span class="math inline">\(A\)</span>)<span class="math inline">\(= r\)</span>. O problema de mínimos quadrados associado ao sistema linear<span class="math inline">\(Ax = b\)</span> possui exatamente uma solução de norma mínima.</p>
+<section id="que-tipo-de-problemas-a-svd-resolve" class="slide level2">
+<h2>Que tipo de problemas a SVD resolve?</h2>
+<ul>
+<li class="fragment">Sistemas sobredeterminados (<span class="math inline">\(m &gt; n\)</span>)</li>
+<li class="fragment">Ajustes de curvas (regressão linear/múltipla)</li>
+<li class="fragment">Compressão de imagens e dados</li>
+<li class="fragment">Redução de dimensionalidade (PCA)</li>
+</ul>
 </section>
 <section id="fundamentação-teórica" class="slide level2">
 <h2>Fundamentação Teórica</h2>
@@ -261,48 +270,31 @@ A x = b
 <section id="abordagens-clássicas" class="slide level2">
 <h2>Abordagens Clássicas</h2>
 <ul>
-<li class="fragment"><strong>Solução Analítica</strong>:<span class="math inline">\(x = (A^T A)^{-1} A^T b\)</span>
+<li class="fragment"><strong>Solução Analítica</strong>: <span class="math inline">\(x = (A^T A)^{-1} A^T b\)</span>
 <ul>
 <li class="fragment">Rápida, mas instável se<span class="math inline">\(A^T A\)</span> for mal-condicionada</li>
 </ul></li>
-<li class="fragment"><strong>Decomposição QR</strong>:<span class="math inline">\(A = QR\)</span>
+<li class="fragment"><strong>Decomposição QR</strong>: <span class="math inline">\(A = QR\)</span>
 <ul>
 <li class="fragment">Estável, mas sensível à colinearidade</li>
 </ul></li>
-<li class="fragment"><strong>Decomposição SVD</strong>:<span class="math inline">\(A = U \Sigma V^T\)</span>
+<li class="fragment"><strong>Decomposição SVD</strong>: <span class="math inline">\(A = U \Sigma V^T\)</span>
 <ul>
 <li class="fragment">Alta estabilidade numérica, mesmo com colinearidade</li>
 </ul></li>
 </ul>
 </section>
-<section id="por-que-svd" class="slide level2">
-<h2>Por que SVD?</h2>
+<section id="svd-aplicada-a-mínimos-quadrados" class="slide level2">
+<h2>SVD aplicada a mínimos quadrados</h2>
 <ul>
-<li class="fragment">Evita a inversão de matrizes quase singulares</li>
-<li class="fragment">Lida bem com:
-<ul>
-<li class="fragment">Colunas quase linearmente dependentes</li>
-<li class="fragment">Matrizes retangulares</li>
-<li class="fragment">Problemas mal-condicionados</li>
-</ul></li>
-<li class="fragment">Permite identificar e <strong>filtrar valores singulares pequenos</strong></li>
-<li class="fragment">Retorna a solução de <strong>norma mínima</strong>: <span class="math display">\[
-x = V \Sigma^+ U^T b
-\]</span></li>
-</ul>
-</section>
-<section id="metodologia" class="slide level2">
-<h2>Metodologia</h2>
-<ul>
-<li class="fragment">A ideia central é resolver o problema de mínimos quadrados com base na decomposição: <span class="math display">\[
-A = U \Sigma V^T
-\]</span></li>
-<li class="fragment">Utilizamos a pseudo-inversa de<span class="math inline">\(A\)</span>: <span class="math display">\[
-A^+ = V \Sigma^+ U^T
-\]</span></li>
-<li class="fragment">A solução de norma mínima é então: <span class="math display">\[
-x = A^+ b
-\]</span></li>
+<li class="fragment"><p>Problema clássico:</p>
+<p><span class="math display">\[
+\min \|Ax - b\|_2
+\]</span></p></li>
+<li class="fragment"><p>SVD fornece:</p>
+<p><span class="math display">\[
+x = A^+ b = V \Sigma^+ U^T b
+\]</span></p></li>
 </ul>
 </section>
 <section id="exemplo-1-regressão-linear-consumo-renda" class="slide level2 smaller scrollable" data-transition="slide">
@@ -408,18 +400,6 @@ P(t) = a \cdot e^{bt}
 <li class="fragment"><p>Estimativas obtidas: -<span class="math inline">\(a \approx 1000\)</span>,<span class="math inline">\(b \approx 0{,}041\)</span></p></li>
 </ul>
 </section>
-<section id="comparação-dados-reais-vs.-modelo" class="slide level2">
-<h2>Comparação: Dados reais vs.&nbsp;Modelo</h2>
-<ul>
-<li class="fragment"><p>A curva estimada se ajusta bem ao crescimento exponencial dos dados reais.</p></li>
-<li class="fragment"><p>A SVD possibilitou:</p>
-<ul>
-<li class="fragment">Tratamento numérico estável</li>
-<li class="fragment">Ajuste de norma mínima</li>
-<li class="fragment">Resultado interpretável</li>
-</ul></li>
-</ul>
-</section>
 <section id="carregamento-dos-dados" class="slide level2 smaller scrollable" data-transition="slide">
 <h2>Carregamento dos dados</h2>
 <div class="panel-tabset">
@@ -458,31 +438,36 @@ P(t) = a \cdot e^{bt}
 </div>
 </div>
 </section>
+<section id="pontos-fortes-e-fracos" class="slide level2">
+<h2>Pontos fortes e fracos</h2>
+<p><strong>Pontos fortes:</strong></p>
+<ul>
+<li class="fragment">Estável numericamente</li>
+<li class="fragment">Aplica-se a qualquer matriz</li>
+<li class="fragment">Solução de norma mínima</li>
+</ul>
+<p><strong>Pontos fracos:</strong></p>
+<ul>
+<li class="fragment">Mais custosa computacionalmente</li>
+<li class="fragment">Pode ser “overkill” para problemas simples</li>
+</ul>
+</section>
+<section id="aplicações-ideais" class="slide level2">
+<h2>Aplicações ideais</h2>
+<ul>
+<li class="fragment">Engenharia e estatística</li>
+<li class="fragment">Visão computacional (compressão de imagens)</li>
+<li class="fragment">Análise de dados (PCA)</li>
+<li class="fragment">Machine Learning (redução de dimensionalidade)</li>
+</ul>
+</section>
 <section id="conclusão" class="slide level2" data-auto-animate="true">
 <h2 data-id="quarto-animate-title">Conclusão</h2>
 <ul>
-<li class="fragment"><p>A SVD se mostrou eficiente para resolver problemas de mínimos quadrados:</p>
-<ul>
-<li class="fragment">Evita instabilidades numéricas<br>
-</li>
-<li class="fragment">Aplica-se a matrizes não quadradas ou mal-condicionadas<br>
-</li>
-<li class="fragment">Permite estimar soluções de norma mínima<br>
-</li>
-<li class="fragment">Adequada para modelos lineares e transformações lineares</li>
-</ul></li>
-</ul>
-</section>
-<section id="referências-bibliográficas" class="slide level2">
-<h2>Referências Bibliográficas</h2>
-<ul>
-<li class="fragment">STRANG, Gilbert. <em>Álgebra Linear e suas Aplicações</em>. Cengage, 2010.<br>
-</li>
-<li class="fragment">Wikipedia – Método dos Mínimos Quadrados<br>
-</li>
-<li class="fragment">Wikipedia – Decomposição em Valores Singulares<br>
-</li>
-<li class="fragment">TREFETHEN, L. N. &amp; BAU III, D. <em>Numerical Linear Algebra</em>. SIAM, 1997.</li>
+<li class="fragment">SVD oferece solução robusta para mínimos quadrados</li>
+<li class="fragment">Permite explorar problemas de modelagem com confiança</li>
+<li class="fragment">Aplicações reais e práticas</li>
+<li class="fragment">Desafios: entender a decomposição, transformar problemas</li>
 </ul>
 </section>
 <section id="section" class="slide level2">

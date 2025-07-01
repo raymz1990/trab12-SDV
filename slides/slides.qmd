@@ -25,24 +25,31 @@ library(scales)
 library(plotly)
 ```
 
-## Introdução
 
-- Ajustar curvas a dados reais é essencial em modelagem.
-- O método dos mínimos quadrados busca minimizar a soma dos quadrados dos resíduos.
-- SVD oferece uma solução estável, mesmo em casos com colinearidade ou matrizes mal-condicionadas.
+## O que é a técnica SVD e por que usar?
 
+* SVD = Decomposição em Valores Singulares
+* Toda matriz $A (m×n)$ pode ser escrita como:
 
-## Problema de Mínimos Quadrados
+  $$
+  A = U \Sigma V^T
+  $$
+* $U, V$: ortogonais | $\Sigma$: diagonal com valores singulares
 
--  $Ax = b$ nem sempre tem solução exata.
+## Propriedades da SVD
 
--   O problema de mínimos quadrados consiste em determinar um vetor$x$ que minimiza a expressão$\|b - Ax\|_2$.
+* $U$ e $V$ são ortogonais
+* Valores singulares $\Sigma \leq 0$
+* Sempre existe, mesmo para matrizes não quadradas
+* Ordenados de forma decrescente
 
--   A denominação desse problema se deve ao fato de estarmos minimizando a soma dos quadrados dos resíduos.
+## Que tipo de problemas a SVD resolve?
 
-## Teorema
+* Sistemas sobredeterminados ($m > n$)
+* Ajustes de curvas (regressão linear/múltipla)
+* Compressão de imagens e dados
+* Redução de dimensionalidade (PCA)
 
-Sejam$A \in \mathbb{R}^{n \times m}$,$b \in \mathbb{R}^n$ ($n < m$) e posto($A$)$= r$. O problema de mínimos quadrados associado ao sistema linear$Ax = b$ possui exatamente uma solução de norma mínima.
 
 ## Fundamentação Teórica
 
@@ -73,41 +80,26 @@ Sejam$A \in \mathbb{R}^{n \times m}$,$b \in \mathbb{R}^n$ ($n < m$) e posto($A$)
 
 ## Abordagens Clássicas
 
-- **Solução Analítica**:$x = (A^T A)^{-1} A^T b$
+- **Solução Analítica**: $x = (A^T A)^{-1} A^T b$
   - Rápida, mas instável se$A^T A$ for mal-condicionada
-- **Decomposição QR**:$A = QR$
+- **Decomposição QR**: $A = QR$
   - Estável, mas sensível à colinearidade
-- **Decomposição SVD**:$A = U \Sigma V^T$
+- **Decomposição SVD**: $A = U \Sigma V^T$
   - Alta estabilidade numérica, mesmo com colinearidade
-
-
-## Por que SVD?
-
-- Evita a inversão de matrizes quase singulares
-- Lida bem com:
-  - Colunas quase linearmente dependentes
-  - Matrizes retangulares
-  - Problemas mal-condicionados
-- Permite identificar e **filtrar valores singulares pequenos**
-- Retorna a solução de **norma mínima**:
- $$
-  x = V \Sigma^+ U^T b
- $$
   
-## Metodologia
+## SVD aplicada a mínimos quadrados 
 
-- A ideia central é resolver o problema de mínimos quadrados com base na decomposição:
- $$
-  A = U \Sigma V^T
- $$
-- Utilizamos a pseudo-inversa de$A$:
- $$
-  A^+ = V \Sigma^+ U^T
- $$
-- A solução de norma mínima é então:
- $$
-  x = A^+ b
- $$
+
+* Problema clássico:
+
+  $$
+  \min \|Ax - b\|_2
+  $$
+* SVD fornece:
+
+  $$
+  x = A^+ b = V \Sigma^+ U^T b
+  $$
 
 ## Exemplo 1 – Regressão Linear: Consumo × Renda {.smaller .scrollable transition="slide"}
 
@@ -176,16 +168,6 @@ Dados (Wikipedia)
   -$a \approx 1000$,$b \approx 0{,}041$
 
 
-## Comparação: Dados reais vs. Modelo
-
-- A curva estimada se ajusta bem ao crescimento exponencial dos dados reais.
-
-- A SVD possibilitou:
-  - Tratamento numérico estável
-  - Ajuste de norma mínima
-  - Resultado interpretável
-
-
 ## Carregamento dos dados {.smaller .scrollable transition="slide"}
 
 ::: panel-tabset
@@ -226,24 +208,37 @@ b_exp = c1
 
 :::
 
+
+## Pontos fortes e fracos
+
+
+**Pontos fortes:**
+
+* Estável numericamente
+* Aplica-se a qualquer matriz
+* Solução de norma mínima
+
+**Pontos fracos:**
+
+* Mais custosa computacionalmente
+* Pode ser “overkill” para problemas simples
+
+## Aplicações ideais
+
+
+
+* Engenharia e estatística
+* Visão computacional (compressão de imagens)
+* Análise de dados (PCA)
+* Machine Learning (redução de dimensionalidade)
+
 ## Conclusão {auto-animate="true"}
 
-- A SVD se mostrou eficiente para resolver problemas de mínimos quadrados:
 
-  - Evita instabilidades numéricas  
-  - Aplica-se a matrizes não quadradas ou mal-condicionadas  
-  - Permite estimar soluções de norma mínima  
-  - Adequada para modelos lineares e transformações lineares
-
-
-
-## Referências Bibliográficas
-
-- STRANG, Gilbert. *Álgebra Linear e suas Aplicações*. Cengage, 2010.  
-- Wikipedia – Método dos Mínimos Quadrados  
-- Wikipedia – Decomposição em Valores Singulares  
-- TREFETHEN, L. N. & BAU III, D. *Numerical Linear Algebra*. SIAM, 1997.
-
+* SVD oferece solução robusta para mínimos quadrados
+* Permite explorar problemas de modelagem com confiança
+* Aplicações reais e práticas
+* Desafios: entender a decomposição, transformar problemas
 
 
 ## {}
